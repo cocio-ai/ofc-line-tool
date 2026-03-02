@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>店舗向けLINE発信ツール</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #008D62;
+            --primary-hover: #006B4A;
+            --bg: #F0F4F8;
+            --card-bg: #FFFFFF;
+            --text-main: #333333;
+            --text-muted: #6B7280;
+            --border: #E5E7EB;
+        }
+
+        body { 
+            font-family: 'Noto Sans JP', sans-serif; 
+            padding: 20px; 
+            background-color: var(--bg); 
+            color: var(--text-main); 
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        .container { 
+            display: flex; 
+            flex-wrap: wrap; 
+            gap: 24px; 
+            max-width: 1100px; 
+            margin: auto; 
+            align-items: flex-start;
+        }
+
+        .card { 
+            background: var(--card-bg); 
+            padding: 24px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03); 
+        }
+
+        .form-section { flex: 1.5; min-width: 380px; }
+        .preview-section { flex: 1; min-width: 350px; position: sticky; top: 20px; }
+
+        h2 { 
+            font-size: 1.25rem; 
+            color: var(--primary);
+            border-bottom: 2px solid var(--border); 
+            padding-bottom: 12px; 
+            margin-top: 0; 
+            display: flex;
+            align-items: center;
+        }
+
+        .section-title {
+            font-size: 1rem;
+            font-weight: 700;
+            margin: 24px 0 12px 0;
+            border-left: 4px solid var(--primary);
+            padding-left: 10px;
+        }
+
+        label { display: block; font-weight: 500; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px; }
+        
+        input[type="text"], input[type="number"], select, textarea { 
+            width: 100%; 
+            padding: 10px 12px; 
+            border: 1px solid var(--border); 
+            border-radius: 6px; 
+            box-sizing: border-box; 
+            font-family: inherit;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+            background-color: #F9FAFB;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            background-color: #FFF;
+            box-shadow: 0 0 0 3px rgba(0, 141, 98, 0.1);
+        }
+
+        .flex-inputs { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; }
+        .flex-inputs > * { flex: 1; margin-bottom: 0; }
+        
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 12px;}
+
+        .input-block { background-color: #F9FAFB; border: 1px solid var(--border); padding: 16px; border-radius: 8px; margin-bottom: 12px; }
+        .sub-label { font-size: 0.8rem; color: var(--text-muted); margin: 8px 0 4px 0; display: block; font-weight: 500;}
+
+        button { font-family: inherit; border: none; border-radius: 6px; cursor: pointer; font-weight: 700; transition: all 0.2s; }
+        
+        .btn-get { background-color: var(--primary); color: white; padding: 10px 16px; flex: none; width: auto;}
+        .btn-get:hover { background-color: var(--primary-hover); }
+
+        .btn-add { background-color: #E5E7EB; color: var(--text-main); padding: 8px 16px; font-size: 0.85rem; width: 100%; margin-bottom: 8px;}
+        .btn-add:hover { background-color: #D1D5DB; }
+
+        .btn-generate { background-color: var(--primary); color: white; padding: 16px; font-size: 1.1rem; width: 100%; margin-top: 24px; box-shadow: 0 4px 6px rgba(0, 141, 98, 0.2); }
+        .btn-generate:hover { background-color: var(--primary-hover); transform: translateY(-1px); }
+
+        .btn-copy { background-color: #06C755; color: white; padding: 16px; font-size: 1.1rem; width: 100%; margin-top: 16px; }
+        .btn-copy:hover { background-color: #05A546; }
+
+        #output-text { height: 650px; font-family: 'Courier New', monospace; resize: none; background-color: #F9FAFB; font-size: 14px; line-height: 1.6; padding: 16px; }
+
+        .tone-selector { display: flex; gap: 20px; margin-bottom: 16px; }
+        .tone-selector label { font-size: 1rem; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+        .tone-selector input[type="radio"] { accent-color: var(--primary); width: 18px; height: 18px; margin: 0; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="card form-section">
+        <h2>📝 入力フォーム</h2>
+
+        <div class="section-title">文面のトーン</div>
+        <div class="tone-selector">
+            <label><input type="radio" name="tone" value="formal" onchange="saveSettings()" checked> フォーマル（丁寧）</label>
+            <label><input type="radio" name="tone" value="casual" onchange="saveSettings()"> カジュアル（親しみ）</label>
+        </div>
+        
+        <div class="section-title">① 明日の天気と気温</div>
+        <div class="flex-inputs">
+            <select id="area-select" onchange="saveSettings()">
+                <option value="016000">北海道(札幌)</option>
+                <option value="020000">青森県</option>
+                <option value="030000">岩手県</option>
+                <option value="040000">宮城県</option>
+                <option value="050000">秋田県</option>
+                <option value="060000">山形県</option>
+                <option value="070000">福島県</option>
+                <option value="080000">茨城県</option>
+                <option value="090000">栃木県</option>
+                <option value="100000">群馬県</option>
+                <option value="110000">埼玉県</option>
+                <option value="120000">千葉県</option>
+                <option value="130000" selected>東京都</option>
+                <option value="140000">神奈川県</option>
+                <option value="150000">新潟県</option>
+                <option value="160000">富山県</option>
+                <option value="170000">石川県</option>
+                <option value="180000">福井県</option>
+                <option value="190000">山梨県</option>
+                <option value="200000">長野県</option>
+                <option value="210000">岐阜県</option>
+                <option value="220000">静岡県</option>
+                <option value="230000">愛知県</option>
+                <option value="240000">三重県</option>
+                <option value="250000">滋賀県</option>
+                <option value="260000">京都府</option>
+                <option value="270000">大阪府</option>
+                <option value="280000">兵庫県</option>
+                <option value="290000">奈良県</option>
+                <option value="300000">和歌山県</option>
+                <option value="310000">鳥取県</option>
+                <option value="320000">島根県</option>
+                <option value="330000">岡山県</option>
+                <option value="340000">広島県</option>
+                <option value="350000">山口県</option>
+                <option value="360000">徳島県</option>
+                <option value="370000">香川県</option>
+                <option value="380000">愛媛県</option>
+                <option value="390000">高知県</option>
+                <option value="400000">福岡県</option>
+                <option value="410000">佐賀県</option>
+                <option value="420000">長崎県</option>
+                <option value="430000">熊本県</option>
+                <option value="440000">大分県</option>
+                <option value="450000">宮崎県</option>
+                <option value="460000">鹿児島県</option>
+                <option value="471000">沖縄県</option>
+            </select>
+            <button type="button" class="btn-get" onclick="fetchWeather()">自動取得</button>
+        </div>
+        <div class="flex-inputs">
+            <input type="text" id="weather-input" placeholder="天気（例: 晴れのち雨）" style="flex: 1;">
+            <input type="text" id="temp-input" placeholder="気温（例: 最高28℃ / 最低20℃）" style="flex: 1.2;">
+        </div>
+        <textarea id="weather-impact" rows="2" placeholder="天候の影響と対策（例: 気温上昇で冷たい麺の販売が伸長しそうです。発注強化を！）"></textarea>
+
+        <div class="section-title">② 地区実績 / ③ サブ実績</div>
+        <label>地区実績（売上 / 客数 / 前年比）</label>
+        <div class="grid-3">
+            <input type="number" id="dist-sales" placeholder="売上(千円)">
+            <input type="number" id="dist-cust" placeholder="客数(人)">
+            <input type="number" id="dist-yoy" placeholder="前年比(%)">
+        </div>
+        <label>サブ実績（売上 / 客数 / 前年比）</label>
+        <div class="grid-3">
+            <input type="number" id="sub-sales" placeholder="売上(千円)">
+            <input type="number" id="sub-cust" placeholder="客数(人)">
+            <input type="number" id="sub-yoy" placeholder="前年比(%)">
+        </div>
+
+        <div class="section-title">④ 新商品の動向</div>
+        <div id="new-products-container">
+            <div class="input-block product-block">
+                <div class="flex-inputs">
+                    <input type="text" class="item-name" placeholder="商品名" style="flex: 2;">
+                    <input type="number" class="item-avg" placeholder="地区平均(個)">
+                </div>
+                <span class="sub-label">▼ 販売上位店舗（任意）</span>
+                <div class="flex-inputs">
+                    <input type="text" class="s1-name" placeholder="1位: 店舗名">
+                    <input type="number" class="s1-qty" placeholder="販売数">
+                </div>
+                <div class="flex-inputs">
+                    <input type="text" class="s2-name" placeholder="2位: 店舗名">
+                    <input type="number" class="s2-qty" placeholder="販売数">
+                </div>
+            </div>
+        </div>
+        <button type="button" class="btn-add" onclick="addNewProduct()">＋ 新商品を追加</button>
+
+        <div class="section-title">⑤ 分類動向</div>
+        <div id="category-container">
+            <div class="input-block category-block">
+                <div class="flex-inputs">
+                    <input type="text" class="cat-name" placeholder="分類名（例: 冷し麺）" style="flex: 2;">
+                    <input type="number" class="cat-avg" placeholder="地区平均">
+                </div>
+                <span class="sub-label">▼ 販売上位店舗（任意）</span>
+                <div class="flex-inputs">
+                    <input type="text" class="s1-name" placeholder="1位: 店舗名">
+                    <input type="number" class="s1-qty" placeholder="販売数">
+                </div>
+                <div class="flex-inputs">
+                    <input type="text" class="s2-name" placeholder="2位: 店舗名">
+                    <input type="number" class="s2-qty" placeholder="販売数">
+                </div>
+            </div>
+        </div>
+        <button type="button" class="btn-add" onclick="addCategory()">＋ 分類を追加</button>
+
+        <div class="section-title">⑥ 発注注意事項 / ⑦ その他</div>
+        <textarea id="order-notes" rows="3" placeholder="本日の発注の注意事項" style="margin-bottom: 12px;"></textarea>
+        <textarea id="free-text" rows="3" placeholder="その他、フリー記入（連絡事項など）"></textarea>
+
+        <button type="button" class="btn-generate" onclick="generateText()">プレビューを作成 ✨</button>
+    </div>
+
+    <div class="card preview-section">
+        <h2>📱 LINEプレビュー</h2>
+        <textarea id="output-text" readonly placeholder="「プレビューを作成」ボタンを押すと、入力した項目だけをまとめた文章が生成されます。"></textarea>
+        <button class="btn-copy" onclick="copyToClipboard()">LINE用にコピーする</button>
+    </div>
+</div>
+
+<script>
+    // --- 初期設定の読み込みと保存 ---
+    function loadSettings() {
+        const savedArea = localStorage.getItem('selectedArea');
+        const savedTone = localStorage.getItem('selectedTone');
+        
+        if (savedArea) {
+            document.getElementById('area-select').value = savedArea;
+        }
+        if (savedTone) {
+            const radio = document.querySelector(`input[name="tone"][value="${savedTone}"]`);
+            if (radio) radio.checked = true;
+        }
+    }
+
+    function saveSettings() {
+        const area = document.getElementById('area-select').value;
+        const tone = document.querySelector('input[name="tone"]:checked').value;
+        
+        localStorage.setItem('selectedArea', area);
+        localStorage.setItem('selectedTone', tone);
+    }
+
+    // 画面読み込み時に実行
+    window.onload = loadSettings;
+    // -----------------------------
+
+    async function fetchWeather() {
+        const btn = document.querySelector('.btn-get');
+        const originalText = btn.innerText;
+        btn.innerText = '取得中...';
+        btn.style.backgroundColor = '#6B7280';
+
+        const areaCode = document.getElementById('area-select').value;
+        const url = `https://www.jma.go.jp/bosai/forecast/data/forecast/${areaCode}.json`;
+        
+        try {
+            const response = await fetch(url);
+            const data = await response.json();
+            
+            const weathers = data[0].timeSeries[0].areas[0].weathers;
+            const targetWeather = weathers.length > 1 ? weathers[1] : weathers[0];
+            document.getElementById('weather-input').value = targetWeather.replace(/　/g, ' ');
+
+            try {
+                const timeDefines = data[1].timeSeries[0].timeDefines;
+                const tempsMin = data[1].timeSeries[1].areas[0].tempsMin;
+                const tempsMax = data[1].timeSeries[1].areas[0].tempsMax;
+                
+                const tomorrow = new Date();
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                const tomorrowStr = tomorrow.toISOString().split('T')[0];
+                
+                let targetIndex = -1;
+                for (let i = 0; i < timeDefines.length; i++) {
+                    if (timeDefines[i].startsWith(tomorrowStr)) {
+                        targetIndex = i;
+                        break;
+                    }
+                }
+                
+                if (targetIndex !== -1 && tempsMin[targetIndex] && tempsMax[targetIndex]) {
+                    document.getElementById('temp-input').value = `最高${tempsMax[targetIndex]}℃ / 最低${tempsMin[targetIndex]}℃`;
+                } else {
+                    const shortTemps = data[0].timeSeries[2].areas[0].temps;
+                    if(shortTemps && shortTemps.length >= 2) {
+                         document.getElementById('temp-input').value = `最高${shortTemps[1]}℃ / 最低${shortTemps[0]}℃`;
+                    }
+                }
+            } catch(e) {
+                console.warn("気温の解析に失敗しました", e);
+            }
+
+            btn.innerText = '取得完了！';
+            btn.style.backgroundColor = '#05A546';
+            setTimeout(() => {
+                btn.innerText = originalText;
+                btn.style.backgroundColor = 'var(--primary)';
+            }, 2000);
+
+        } catch (error) {
+            alert('データの取得に失敗しました。');
+            btn.innerText = originalText;
+            btn.style.backgroundColor = 'var(--primary)';
+        }
+    }
+
+    function addNewProduct() {
+        const container = document.getElementById('new-products-container');
+        const block = document.createElement('div');
+        block.className = 'input-block product-block';
+        block.innerHTML = `
+            <div class="flex-inputs">
+                <input type="text" class="item-name" placeholder="商品名" style="flex: 2;">
+                <input type="number" class="item-avg" placeholder="地区平均(個)">
+            </div>
+            <span class="sub-label">▼ 販売上位店舗（任意）</span>
+            <div class="flex-inputs">
+                <input type="text" class="s1-name" placeholder="1位: 店舗名">
+                <input type="number" class="s1-qty" placeholder="販売数">
+            </div>
+            <div class="flex-inputs">
+                <input type="text" class="s2-name" placeholder="2位: 店舗名">
+                <input type="number" class="s2-qty" placeholder="販売数">
+            </div>
+        `;
+        container.appendChild(block);
+    }
+
+    function addCategory() {
+        const container = document.getElementById('category-container');
+        const block = document.createElement('div');
+        block.className = 'input-block category-block';
+        block.innerHTML = `
+            <div class="flex-inputs">
+                <input type="text" class="cat-name" placeholder="分類名（例: 冷し麺）" style="flex: 2;">
+                <input type="number" class="cat-avg" placeholder="地区平均">
+            </div>
+            <span class="sub-label">▼ 販売上位店舗（任意）</span>
+            <div class="flex-inputs">
+                <input type="text" class="s1-name" placeholder="1位: 店舗名">
+                <input type="number" class="s1-qty" placeholder="販売数">
+            </div>
+            <div class="flex-inputs">
+                <input type="text" class="s2-name" placeholder="2位: 店舗名">
+                <input type="number" class="s2-qty" placeholder="販売数">
+            </div>
+        `;
+        container.appendChild(block);
+    }
+
+    function generateText() {
+        const tone = document.querySelector('input[name="tone"]:checked').value;
+        let template = "";
+
+        if (tone === "formal") {
+            template += "おはようございます。\nいつも店舗運営、誠にありがとうございます。\n最新の数値動向と共有事項をご報告いたします。\n\n";
+        } else {
+            template += "おはようございます！☀️\nいつもお店の切り盛りありがとうございます😊\n最新の数値と共有事項をお送りしますね。\n\n";
+        }
+
+        const weather = document.getElementById('weather-input').value;
+        const temp = document.getElementById('temp-input').value;
+        const weatherImpact = document.getElementById('weather-impact').value;
+        if (weather || temp || weatherImpact) {
+            template += "■ 明日の天候と対策\n";
+            if (weather || temp) {
+                template += `[予報] ${weather || ''} ${temp ? '(' + temp + ')' : ''}\n`.trim() + "\n";
+            }
+            if (weatherImpact) template += `💡 ${weatherImpact}\n`;
+            template += "\n";
+        }
+
+        const distSales = document.getElementById('dist-sales').value;
+        const distCust = document.getElementById('dist-cust').value;
+        const distYoy = document.getElementById('dist-yoy').value;
+        const subSales = document.getElementById('sub-sales').value;
+        const subCust = document.getElementById('sub-cust').value;
+        const subYoy = document.getElementById('sub-yoy').value;
+        
+        if (distSales || distCust || distYoy || subSales || subCust || subYoy) {
+            template += "■ 昨日実績\n";
+            if (distSales || distCust || distYoy) {
+                template += `[地区] 売上: ${distSales ? distSales + '千円' : '-'} `;
+                if (distYoy) template += `(前年比${distYoy}%)`;
+                template += ` / 客数: ${distCust ? distCust + '人' : '-'}\n`;
+            }
+            if (subSales || subCust || subYoy) {
+                template += `[サブ] 売上: ${subSales ? subSales + '千円' : '-'} `;
+                if (subYoy) template += `(前年比${subYoy}%)`;
+                template += ` / 客数: ${subCust ? subCust + '人' : '-'}\n`;
+            }
+            template += "\n";
+        }
+
+        let productText = "";
+        document.querySelectorAll('.product-block').forEach((block) => {
+            const name = block.querySelector('.item-name').value;
+            if (name) {
+                const avg = block.querySelector('.item-avg').value || "0";
+                productText += `・${name} (地区平均: ${avg}個)\n`;
+                let stores = [];
+                const s1Name = block.querySelector('.s1-name').value;
+                const s1Qty = block.querySelector('.s1-qty').value;
+                if (s1Name || s1Qty) stores.push(`${s1Name} (${s1Qty || 0}個)`);
+                const s2Name = block.querySelector('.s2-name').value;
+                const s2Qty = block.querySelector('.s2-qty').value;
+                if (s2Name || s2Qty) stores.push(`${s2Name} (${s2Qty || 0}個)`);
+                if (stores.length > 0) productText += `  └ 好調店舗: ${stores.join("、")}\n`;
+            }
+        });
+        if (productText) template += "■ 新商品動向\n" + productText + "\n";
+
+        let categoryText = "";
+        document.querySelectorAll('.category-block').forEach((block) => {
+            const name = block.querySelector('.cat-name').value;
+            if (name) {
+                const avg = block.querySelector('.cat-avg').value || "0";
+                categoryText += `・${name} (地区平均: ${avg})\n`;
+                let stores = [];
+                const s1Name = block.querySelector('.s1-name').value;
+                const s1Qty = block.querySelector('.s1-qty').value;
+                if (s1Name || s1Qty) stores.push(`${s1Name} (${s1Qty || 0})`);
+                const s2Name = block.querySelector('.s2-name').value;
+                const s2Qty = block.querySelector('.s2-qty').value;
+                if (s2Name || s2Qty) stores.push(`${s2Name} (${s2Qty || 0})`);
+                if (stores.length > 0) categoryText += `  └ 好調店舗: ${stores.join("、")}\n`;
+            }
+        });
+        if (categoryText) template += "■ 分類動向\n" + categoryText + "\n";
+
+        const orderNotes = document.getElementById('order-notes').value;
+        if (orderNotes) template += "■ 本日の発注注意事項\n" + orderNotes + "\n\n";
+
+        const freeText = document.getElementById('free-text').value;
+        if (freeText) template += "■ 連絡事項\n" + freeText + "\n\n";
+
+        template += "今日も一日よろしくお願い致します。";
+        document.getElementById('output-text').value = template;
+    }
+
+    function copyToClipboard() {
+        const output = document.getElementById('output-text');
+        if (!output.value) {
+            alert('先にプレビューを作成してください。');
+            return;
+        }
+        output.select();
+        document.execCommand('copy');
+        
+        const btn = document.querySelector('.btn-copy');
+        const originalText = btn.innerText;
+        btn.innerText = 'コピー完了！✨';
+        btn.style.backgroundColor = '#05A546';
+        setTimeout(() => {
+            btn.innerText = originalText;
+            btn.style.backgroundColor = '#06C755';
+        }, 2000);
+    }
+</script>
+
+</body>
+</html>
