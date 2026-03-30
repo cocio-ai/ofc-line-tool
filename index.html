@@ -22,7 +22,14 @@
         .form-section { flex: 1.5; min-width: 400px; }
         .preview-section { flex: 1; min-width: 350px; position: sticky; top: 20px; }
 
-        h2 { font-size: 1.25rem; color: var(--primary); border-bottom: 2px solid var(--border); padding-bottom: 12px; margin-top: 0; display: flex; align-items: center; }
+        .header-container { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border); padding-bottom: 12px; margin-bottom: 12px; }
+        h2 { font-size: 1.25rem; color: var(--primary); margin: 0; display: flex; align-items: center; }
+        
+        /* 裏モード用の隠しスイッチを最上段へ */
+        .secret-switch { text-align: right; }
+        .secret-switch label { display: inline-flex; align-items: center; cursor: pointer; font-size: 0.85rem; color: #999; font-weight: bold;}
+        .secret-switch input { width: auto; margin-right: 5px; cursor: pointer; accent-color: #E45E20;}
+
         .section-title { font-size: 1rem; font-weight: 700; margin: 24px 0 12px 0; border-left: 4px solid var(--primary); padding-left: 10px; }
         label { display: block; font-weight: 500; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px; }
         
@@ -56,18 +63,18 @@
         .photo-preview img { width: 80px; height: 80px; object-fit: cover; border-radius: 4px; border: 1px solid #ccc; }
         .note { font-size: 0.75rem; color: #E45E20; margin-top: 4px; }
         .fixed-location { font-weight: bold; font-size: 1rem; color: var(--text-main); padding-left: 4px; }
-        
-        /* 裏モード用の隠しスイッチ */
-        .secret-switch { text-align: right; margin-top: 20px; }
-        .secret-switch label { display: inline-flex; align-items: center; cursor: pointer; font-size: 1rem; color: #ccc; }
-        .secret-switch input { width: auto; margin-right: 5px; cursor: pointer; accent-color: #E45E20;}
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="card form-section">
-        <h2>📝 連絡事項 入力フォーム</h2>
+        <div class="header-container">
+            <h2>📝 連絡事項 入力フォーム</h2>
+            <div class="secret-switch">
+                <label><input type="checkbox" id="ura-mode">🤫 裏モード</label>
+            </div>
+        </div>
 
         <div class="section-title">① 明日の天気と気温</div>
         <div class="flex-inputs" style="margin-bottom: 12px;">
@@ -78,6 +85,7 @@
             <input type="text" id="weather-input" placeholder="天気（例: 晴れのち雨）">
             <input type="text" id="temp-input" placeholder="気温（例: 最高28℃ / 最低20℃）">
         </div>
+        <textarea id="weather-comment" rows="2" placeholder="天候の影響や対策コメント（例: 暑くなるので冷やし麺の発注を厚めに！）" style="margin-top: 8px;"></textarea>
 
         <div class="section-title">② 地区実績 / ③ サブ実績</div>
         <label>地区平均（売上 / 客数 / 前年比）</label>
@@ -168,10 +176,6 @@
 
         <div class="section-title">⑧ その他・確認事項</div>
         <textarea id="other-notes" rows="4" placeholder="その他の共有事項を入力してください"></textarea>
-
-        <div class="secret-switch">
-            <label><input type="checkbox" id="ura-mode">🤫</label>
-        </div>
         
         <button type="button" class="btn-generate" onclick="generateText()">プレビューを作成 ✨</button>
     </div>
@@ -326,12 +330,21 @@
             template += "おはようございます、綿谷です。\n最新の数値と共有事項をお送りします。\n\n";
         }
 
-        // 1. 天候
+        // 1. 天候とコメント
         const weather = document.getElementById('weather-input').value;
         const temp = document.getElementById('temp-input').value;
-        if (weather || temp) {
+        const wComment = document.getElementById('weather-comment').value;
+
+        if (weather || temp || wComment) {
             const h1 = isUra ? "明日の天気だっぺ" : "明日の天候";
-            template += `■ ① ${h1}\n[予報] ${weather || ''} ${temp ? '(' + temp + ')' : ''}\n\n`;
+            template += `■ ① ${h1}\n`;
+            if (weather || temp) {
+                template += `[予報] ${weather || ''} ${temp ? '(' + temp + ')' : ''}\n`;
+            }
+            if (wComment) {
+                template += `💡 ${wComment}${isUra ? '（ってことだっぺ！）' : ''}\n`;
+            }
+            template += `\n`;
         }
 
         // 2 & 3. 地区・サブ実績
