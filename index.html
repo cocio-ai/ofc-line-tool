@@ -4,85 +4,188 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>店舗向けLINE発信ツール（綿谷OFC版）</title>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #008D62;
-            --primary-hover: #006B4A;
-            --bg: #F0F4F8;
+            /* セブン-イレブン ブランドカラー */
+            --711-green: #008061;
+            --711-orange: #F37021;
+            --711-red: #E2231A;
+            --primary-hover: #00664e;
+            
+            --bg: #F4F7F6;
             --card-bg: #FFFFFF;
-            --text-main: #333333;
-            --text-muted: #6B7280;
-            --border: #E5E7EB;
+            --text-main: #2C3E50;
+            --text-muted: #7F8C8D;
+            --border: #E0E6ED;
         }
 
-        body { font-family: 'Noto Sans JP', sans-serif; padding: 20px; background-color: var(--bg); color: var(--text-main); line-height: 1.5; margin: 0; }
+        body { 
+            font-family: 'Noto Sans JP', sans-serif; 
+            padding: 20px 10px; 
+            background-color: var(--bg); 
+            color: var(--text-main); 
+            line-height: 1.6; 
+            margin: 0; 
+        }
         
-        .container { display: flex; flex-wrap: wrap; gap: 24px; max-width: 1200px; margin: auto; align-items: flex-start; }
-        .card { background: var(--card-bg); padding: 24px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); width: 100%; box-sizing: border-box;}
+        .container { 
+            display: flex; 
+            flex-wrap: wrap; 
+            gap: 24px; 
+            max-width: 1200px; 
+            margin: auto; 
+            align-items: flex-start; 
+        }
+        
+        .card { 
+            background: var(--card-bg); 
+            border-radius: 16px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08); 
+            width: 100%; 
+            box-sizing: border-box;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 7-11 3色ストライプ */
+        .brand-stripe {
+            height: 6px;
+            width: 100%;
+            background: linear-gradient(90deg, var(--711-orange) 0%, var(--711-orange) 33.3%, var(--711-green) 33.3%, var(--711-green) 66.6%, var(--711-red) 66.6%, var(--711-red) 100%);
+        }
+
+        .card-content { padding: 32px; }
         
         .form-section { flex: 1.5; min-width: 320px; }
         .preview-section { flex: 1; min-width: 320px; position: sticky; top: 20px; }
 
-        .header-container { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border); padding-bottom: 12px; margin-bottom: 12px; }
-        h2 { font-size: 1.25rem; color: var(--primary); margin: 0; display: flex; align-items: center; }
+        .header-container { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            border-bottom: 2px solid var(--border); 
+            padding-bottom: 16px; 
+            margin-bottom: 24px; 
+        }
         
-        .secret-switch { text-align: right; }
-        .secret-switch label { display: inline-flex; align-items: center; cursor: pointer; font-size: 0.85rem; color: #999; font-weight: bold;}
-        .secret-switch input { width: auto; margin-right: 5px; cursor: pointer; accent-color: #E45E20;}
+        h2 { 
+            font-size: 1.4rem; 
+            font-weight: 900;
+            color: var(--711-green); 
+            margin: 0; 
+            display: flex; 
+            align-items: center; 
+            letter-spacing: 0.5px;
+        }
 
-        .section-title { font-size: 1.05rem; font-weight: 700; margin: 28px 0 12px 0; border-left: 4px solid var(--primary); padding-left: 10px; }
-        label { display: block; font-weight: 500; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px; }
+        /* スタイリッシュなトグルスイッチ（裏モード） */
+        .toggle-switch-container { display: flex; align-items: center; gap: 10px; font-size: 0.9rem; font-weight: 700; color: #BDC3C7; transition: color 0.3s;}
+        .toggle-switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #E0E6ED; transition: .4s; border-radius: 24px; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2);}
+        input:checked + .slider { background-color: var(--711-orange); }
+        input:checked + .slider:before { transform: translateX(20px); }
+        input:checked ~ .toggle-label { color: var(--711-orange); }
+
+        .section-title { 
+            font-size: 1.1rem; 
+            font-weight: 700; 
+            margin: 32px 0 16px 0; 
+            padding-left: 12px; 
+            position: relative;
+        }
+        .section-title::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 10%;
+            height: 80%;
+            width: 5px;
+            background-color: var(--711-green);
+            border-radius: 10px;
+        }
+
+        label { display: block; font-weight: 700; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px; }
         
         input[type="text"], input[type="number"], textarea, select { 
-            width: 100%; padding: 12px 10px; border: 1px solid var(--border); border-radius: 6px; box-sizing: border-box; font-family: inherit; font-size: 16px; transition: all 0.2s; background-color: #F9FAFB;
+            width: 100%; 
+            padding: 14px 16px; 
+            border: 2px solid var(--border); 
+            border-radius: 10px; 
+            box-sizing: border-box; 
+            font-family: inherit; 
+            font-size: 16px; 
+            color: var(--text-main);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+            background-color: #F8FAFC;
         }
-        input:focus, textarea:focus, select:focus { outline: none; border-color: var(--primary); background-color: #FFF; box-shadow: 0 0 0 3px rgba(0, 141, 98, 0.1); }
+        input:focus, textarea:focus, select:focus { 
+            outline: none; 
+            border-color: var(--711-green); 
+            background-color: #FFF; 
+            box-shadow: 0 4px 12px rgba(0, 128, 97, 0.1); 
+            transform: translateY(-1px);
+        }
 
-        .flex-inputs { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+        .flex-inputs { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; }
         .flex-inputs > * { flex: 1; margin-bottom: 0; }
-        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px;}
-        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 12px;}
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px;}
+        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px;}
 
-        .input-block { background-color: #F9FAFB; border: 1px solid var(--border); padding: 16px; border-radius: 8px; margin-bottom: 12px; }
-        .sub-label { font-size: 0.8rem; color: var(--primary); margin: 8px 0 4px 0; display: block; font-weight: 700;}
-
-        button { font-family: inherit; border: none; border-radius: 6px; cursor: pointer; font-weight: 700; transition: all 0.2s; }
-        .btn-get { background-color: var(--primary); color: white; padding: 10px 16px; flex: none; width: auto;}
-        .btn-get:hover { background-color: var(--primary-hover); }
-        .btn-add { background-color: #E5E7EB; color: var(--text-main); padding: 12px 16px; font-size: 0.95rem; width: 100%; margin-bottom: 8px;}
-        .btn-add:hover { background-color: #D1D5DB; }
-        .btn-generate { background-color: var(--primary); color: white; padding: 16px; font-size: 1.1rem; width: 100%; margin-top: 10px; box-shadow: 0 4px 6px rgba(0, 141, 98, 0.2); }
-        .btn-generate:hover { background-color: var(--primary-hover); transform: translateY(-1px); }
-        .btn-copy { background-color: #06C755; color: white; padding: 16px; font-size: 1.1rem; width: 100%; margin-top: 16px; }
-        .btn-copy:hover { background-color: #05A546; }
-
-        #output-text { height: 600px; font-family: 'Courier New', monospace; resize: none; background-color: #F9FAFB; font-size: 14px; line-height: 1.6; padding: 16px; }
+        .input-block { background-color: #F8FAFC; border: 1px solid var(--border); padding: 20px; border-radius: 12px; margin-bottom: 16px; position: relative; transition: box-shadow 0.3s;}
+        .input-block:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
         
-        .photo-area { border: 2px dashed var(--border); padding: 16px; text-align: center; border-radius: 8px; background: #fff; margin-bottom: 12px;}
-        .photo-preview { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; justify-content: center;}
-        .photo-preview img { width: 80px; height: 80px; object-fit: cover; border-radius: 4px; border: 1px solid #ccc; }
-        .note { font-size: 0.75rem; color: #E45E20; margin-top: 4px; }
-        .fixed-location { font-weight: bold; font-size: 1rem; color: var(--text-main); padding-left: 4px; }
+        .sub-label { font-size: 0.85rem; color: var(--711-orange); margin: 12px 0 6px 0; display: block; font-weight: 700;}
 
+        /* ボタンデザインの洗練 */
+        button { font-family: inherit; border: none; border-radius: 10px; cursor: pointer; font-weight: 700; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .btn-get { background-color: var(--711-green); color: white; padding: 12px 20px; flex: none; width: auto; font-size: 0.95rem; box-shadow: 0 4px 6px rgba(0, 128, 97, 0.2);}
+        .btn-get:hover { background-color: var(--primary-hover); transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0, 128, 97, 0.3);}
+        
+        .btn-add { background-color: transparent; border: 2px dashed #CBD5E1; color: var(--text-muted); padding: 14px; font-size: 0.95rem; width: 100%; margin-bottom: 12px;}
+        .btn-add:hover { background-color: #F1F5F9; border-color: var(--711-green); color: var(--711-green); }
+        
+        .btn-generate { 
+            background: linear-gradient(135deg, var(--711-green) 0%, #00a87f 100%);
+            color: white; 
+            padding: 20px; 
+            font-size: 1.2rem; 
+            width: 100%; 
+            margin-top: 24px; 
+            box-shadow: 0 8px 16px rgba(0, 128, 97, 0.25); 
+            border-radius: 12px;
+            letter-spacing: 1px;
+        }
+        .btn-generate:hover { transform: translateY(-3px); box-shadow: 0 12px 20px rgba(0, 128, 97, 0.35); }
+        .btn-generate:active { transform: translateY(1px); }
+        
+        .btn-copy { background-color: #06C755; color: white; padding: 20px; font-size: 1.2rem; width: 100%; margin-top: 16px; box-shadow: 0 8px 16px rgba(6, 199, 85, 0.25); border-radius: 12px; letter-spacing: 1px;}
+        .btn-copy:hover { background-color: #05A546; transform: translateY(-3px); box-shadow: 0 12px 20px rgba(6, 199, 85, 0.35);}
+
+        #output-text { height: 650px; font-family: 'Courier New', monospace; resize: none; background-color: #2C3E50; color: #ECF0F1; font-size: 14px; line-height: 1.6; padding: 20px; border-radius: 12px; border: none; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);}
+        
+        .photo-area { border: 2px dashed var(--711-orange); padding: 20px; text-align: center; border-radius: 12px; background: #fffcf8; margin-bottom: 16px;}
+        .photo-preview { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 16px; justify-content: center;}
+        .photo-preview img { width: 90px; height: 90px; object-fit: cover; border-radius: 8px; border: 2px solid #fff; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .note { font-size: 0.8rem; color: var(--711-red); margin-top: 8px; font-weight: 500;}
+        .fixed-location { font-weight: 900; font-size: 1.1rem; color: var(--text-main); padding-left: 4px; display: flex; align-items: center; gap: 4px;}
+
+        /* スマホ向け調整 */
         @media screen and (max-width: 768px) {
-            body { padding: 10px; }
+            body { padding: 10px 5px; }
             .container { gap: 16px; flex-direction: column; }
-            .card { padding: 16px; width: 100%; }
+            .card-content { padding: 20px; }
             .form-section, .preview-section { flex: none; min-width: 100%; width: 100%; }
-            
             .preview-section { position: relative; top: 0; }
-            
-            .flex-inputs { flex-direction: column; align-items: stretch; gap: 8px; }
-            
-            .btn-get { width: 100%; padding: 12px; margin-top: 4px; }
-            .fixed-location { margin-bottom: 4px; text-align: center; }
-            
-            .grid-3 { grid-template-columns: 1fr; gap: 8px; }
-            .grid-4 { grid-template-columns: 1fr 1fr; gap: 8px; }
-            
-            .header-container { flex-direction: column; align-items: flex-start; gap: 12px; }
-            .secret-switch { align-self: flex-end; }
+            .flex-inputs { flex-direction: column; align-items: stretch; gap: 12px; }
+            .btn-get { width: 100%; padding: 14px; margin-top: 4px; }
+            .fixed-location { margin-bottom: 4px; justify-content: center; }
+            .grid-3 { grid-template-columns: 1fr; gap: 12px; }
+            .grid-4 { grid-template-columns: 1fr 1fr; gap: 12px; }
+            .header-container { flex-direction: column; align-items: flex-start; gap: 16px; }
+            .toggle-switch-container { align-self: flex-end; }
         }
     </style>
 </head>
@@ -90,119 +193,129 @@
 
 <div class="container">
     <div class="card form-section">
-        <div class="header-container">
-            <h2>📝 連絡事項 入力フォーム</h2>
-            <div class="secret-switch">
-                <label><input type="checkbox" id="ura-mode">🤫 裏モード</label>
-            </div>
-        </div>
-
-        <div class="section-title">① 明日の天気と気温</div>
-        <div class="fixed-location">📍 茨城県 水戸市</div>
-        <button type="button" class="btn-get" onclick="fetchWeather()" style="margin-bottom: 8px;">天気を自動取得</button>
-        <div class="flex-inputs">
-            <input type="text" id="weather-input" placeholder="天気（例: 晴れのち雨）">
-            <input type="text" id="temp-input" placeholder="気温（例: 最高28℃ / 最低20℃）">
-        </div>
-        <textarea id="weather-comment" rows="2" placeholder="天候の影響や対策コメント（例: 暑くなるので冷やし麺の発注を厚めに！）" style="margin-top: 8px;"></textarea>
-
-        <div class="section-title">② 地区実績 / ③ サブ実績</div>
-        <label>地区平均（売上 / 客数 / 前年比）</label>
-        <div class="grid-3">
-            <input type="number" id="dist-sales" placeholder="売上(千円)">
-            <input type="number" id="dist-cust" placeholder="客数(人)">
-            <input type="number" id="dist-yoy" placeholder="前年比(%)">
-        </div>
-        <label>サブ平均（売上 / 客数 / 前年比）</label>
-        <div class="grid-3">
-            <input type="number" id="sub-sales" placeholder="売上(千円)">
-            <input type="number" id="sub-cust" placeholder="客数(人)">
-            <input type="number" id="sub-yoy" placeholder="前年比(%)">
-        </div>
-
-        <div class="section-title">④ 新商品動向</div>
-        <div class="photo-area">
-            <label style="margin:0;">📸 商品画像の準備（最大4枚）</label>
-            <input type="file" id="photo-upload" accept="image/*" multiple onchange="previewPhotos()" style="margin-top:8px;">
-            <div class="note">※画像はLINEの仕様上、文面と一緒に自動コピーできません。保存した画像をLINEで別途送信してください。</div>
-            <div class="photo-preview" id="photo-preview-container"></div>
-        </div>
-
-        <div id="new-products-container">
-            <div class="input-block product-block">
-                <input type="text" class="p-name" placeholder="商品名" style="margin-bottom:8px; font-weight:bold;">
-                <div class="grid-4">
-                    <input type="number" class="p-deliv" placeholder="納品数">
-                    <input type="number" class="p-sales" placeholder="販売数">
-                    <select class="p-rate-type">
-                        <option value="欠品率">欠品率</option>
-                        <option value="導入率">導入率</option>
-                    </select>
-                    <input type="number" class="p-rate-val" placeholder="%">
+        <div class="brand-stripe"></div>
+        <div class="card-content">
+            <div class="header-container">
+                <h2>📱 連絡事項 入力フォーム</h2>
+                
+                <div class="toggle-switch-container">
+                    <span class="toggle-label" style="font-size: 16px;">🤫 裏モード</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="ura-mode">
+                        <span class="slider"></span>
+                    </label>
                 </div>
             </div>
-        </div>
-        <button type="button" class="btn-add" onclick="addNewProduct()">＋ 新商品を追加</button>
 
-        <span class="sub-label">▼ 導入確認単品</span>
-        <div id="intro-items-container">
-            <div class="flex-inputs intro-block">
-                <input type="text" class="i-name" placeholder="商品名">
-                <input type="text" class="i-code" placeholder="商品コード(6桁)" maxlength="6">
+            <div class="section-title">① 明日の天気と気温</div>
+            <div class="fixed-location">📍 茨城県 水戸市</div>
+            <button type="button" class="btn-get" onclick="fetchWeather()" style="margin-bottom: 12px;">🌤 天気を自動取得</button>
+            <div class="flex-inputs">
+                <input type="text" id="weather-input" placeholder="天気（例: 晴れのち雨）">
+                <input type="text" id="temp-input" placeholder="気温（例: 最高28℃ / 最低20℃）">
             </div>
-        </div>
-        <button type="button" class="btn-add" onclick="addIntroItem()">＋ 確認単品を追加</button>
+            <textarea id="weather-comment" rows="2" placeholder="天候の影響や対策コメント（例: 暑くなるので冷やし麺の発注を厚めに！）" style="margin-top: 4px;"></textarea>
 
+            <div class="section-title">② 地区実績 / ③ サブ実績</div>
+            <label>地区平均（売上 / 客数 / 前年比）</label>
+            <div class="grid-3">
+                <input type="number" id="dist-sales" placeholder="売上(千円)">
+                <input type="number" id="dist-cust" placeholder="客数(人)">
+                <input type="number" id="dist-yoy" placeholder="前年比(%)">
+            </div>
+            <label style="margin-top: 12px;">サブ平均（売上 / 客数 / 前年比）</label>
+            <div class="grid-3">
+                <input type="number" id="sub-sales" placeholder="売上(千円)">
+                <input type="number" id="sub-cust" placeholder="客数(人)">
+                <input type="number" id="sub-yoy" placeholder="前年比(%)">
+            </div>
 
-        <div class="section-title">⑤ セール販売状況</div>
-        <div id="sale-container">
-            <div class="input-block sale-block">
-                <input type="text" class="sl-name" placeholder="セール名（例: おにぎり100円セール）" style="margin-bottom:8px; font-weight:bold;">
-                <label>地区平均（販売数 / 金額 / 前年比）</label>
-                <div class="grid-3">
-                    <input type="number" class="sl-d-qty" placeholder="販売数(個)">
-                    <input type="number" class="sl-d-amt" placeholder="金額(円)">
-                    <input type="number" class="sl-d-yoy" placeholder="前年比(%)">
-                </div>
-                <label>サブ平均（販売数 / 金額 / 前年比）</label>
-                <div class="grid-3">
-                    <input type="number" class="sl-s-qty" placeholder="販売数(個)">
-                    <input type="number" class="sl-s-amt" placeholder="金額(円)">
-                    <input type="number" class="sl-s-yoy" placeholder="前年比(%)">
+            <div class="section-title">④ 新商品動向</div>
+            <div class="photo-area">
+                <label style="margin:0; color: var(--711-orange);">📸 商品画像の準備（最大4枚）</label>
+                <input type="file" id="photo-upload" accept="image/*" multiple onchange="previewPhotos()" style="margin-top:12px; font-size: 14px;">
+                <div class="note">※画像はLINEの仕様上、文面と一緒に自動コピーできません。保存した画像をLINEで別途送信してください。</div>
+                <div class="photo-preview" id="photo-preview-container"></div>
+            </div>
+
+            <div id="new-products-container">
+                <div class="input-block product-block">
+                    <input type="text" class="p-name" placeholder="商品名" style="margin-bottom:12px; font-weight:900;">
+                    <div class="grid-4">
+                        <input type="number" class="p-deliv" placeholder="納品数">
+                        <input type="number" class="p-sales" placeholder="販売数">
+                        <select class="p-rate-type">
+                            <option value="欠品率">欠品率</option>
+                            <option value="導入率">導入率</option>
+                        </select>
+                        <input type="number" class="p-rate-val" placeholder="%">
+                    </div>
                 </div>
             </div>
-        </div>
-        <button type="button" class="btn-add" onclick="addSale()">＋ セールを追加</button>
+            <button type="button" class="btn-add" onclick="addNewProduct()">＋ 新商品を追加</button>
 
-        <div class="section-title">⑥ 分類動向</div>
-        <div id="category-container">
-            <div class="input-block category-block">
-                <input type="text" class="c-name" placeholder="分類名（例: 調理麺）" style="margin-bottom:8px; font-weight:bold;">
-                <label>地区平均</label>
-                <div class="grid-4">
-                    <input type="number" class="c-deliv" placeholder="納品数">
-                    <input type="number" class="c-sales" placeholder="販売数">
-                    <input type="number" class="c-yoy" placeholder="前年比(%)">
-                    <input type="number" class="c-oos" placeholder="欠品率(%)">
+            <span class="sub-label">▼ 導入確認単品</span>
+            <div id="intro-items-container">
+                <div class="flex-inputs intro-block">
+                    <input type="text" class="i-name" placeholder="商品名">
+                    <input type="text" class="i-code" placeholder="商品コード(6桁)" maxlength="6">
                 </div>
-                <textarea class="c-comment" rows="2" placeholder="コメント（例: 夕夜間の品揃えが不足気味です）"></textarea>
             </div>
+            <button type="button" class="btn-add" onclick="addIntroItem()">＋ 確認単品を追加</button>
+
+            <div class="section-title">⑤ セール販売状況</div>
+            <div id="sale-container">
+                <div class="input-block sale-block">
+                    <input type="text" class="sl-name" placeholder="セール名（例: おにぎり100円セール）" style="margin-bottom:12px; font-weight:900;">
+                    <label>地区平均（販売数 / 金額 / 前年比）</label>
+                    <div class="grid-3">
+                        <input type="number" class="sl-d-qty" placeholder="販売数(個)">
+                        <input type="number" class="sl-d-amt" placeholder="金額(円)">
+                        <input type="number" class="sl-d-yoy" placeholder="前年比(%)">
+                    </div>
+                    <label style="margin-top: 12px;">サブ平均（販売数 / 金額 / 前年比）</label>
+                    <div class="grid-3">
+                        <input type="number" class="sl-s-qty" placeholder="販売数(個)">
+                        <input type="number" class="sl-s-amt" placeholder="金額(円)">
+                        <input type="number" class="sl-s-yoy" placeholder="前年比(%)">
+                    </div>
+                </div>
+            </div>
+            <button type="button" class="btn-add" onclick="addSale()">＋ セールを追加</button>
+
+            <div class="section-title">⑥ 分類動向</div>
+            <div id="category-container">
+                <div class="input-block category-block">
+                    <input type="text" class="c-name" placeholder="分類名（例: 調理麺）" style="margin-bottom:12px; font-weight:900;">
+                    <label>地区平均</label>
+                    <div class="grid-4">
+                        <input type="number" class="c-deliv" placeholder="納品数">
+                        <input type="number" class="c-sales" placeholder="販売数">
+                        <input type="number" class="c-yoy" placeholder="前年比(%)">
+                        <input type="number" class="c-oos" placeholder="欠品率(%)">
+                    </div>
+                    <textarea class="c-comment" rows="2" placeholder="コメント（例: 夕夜間の品揃えが不足気味です）"></textarea>
+                </div>
+            </div>
+            <button type="button" class="btn-add" onclick="addCategory()">＋ 分類を追加</button>
+
+            <div class="section-title">⑦ 発注確認事項</div>
+            <textarea id="order-notes" rows="4" placeholder="発注に関する確認事項を入力してください"></textarea>
+
+            <div class="section-title">⑧ その他・確認事項</div>
+            <textarea id="other-notes" rows="4" placeholder="その他の共有事項を入力してください"></textarea>
+            
+            <button type="button" class="btn-generate" onclick="generateText()">✨ プレビューを作成 ✨</button>
         </div>
-        <button type="button" class="btn-add" onclick="addCategory()">＋ 分類を追加</button>
-
-        <div class="section-title">⑦ 発注確認事項</div>
-        <textarea id="order-notes" rows="4" placeholder="発注に関する確認事項を入力してください"></textarea>
-
-        <div class="section-title">⑧ その他・確認事項</div>
-        <textarea id="other-notes" rows="4" placeholder="その他の共有事項を入力してください"></textarea>
-        
-        <button type="button" class="btn-generate" onclick="generateText()">プレビューを作成 ✨</button>
     </div>
 
     <div class="card preview-section">
-        <h2>📱 LINEプレビュー</h2>
-        <textarea id="output-text" readonly placeholder="「プレビューを作成」ボタンを押すと、入力した項目だけをまとめた文章が生成されます。"></textarea>
-        <button class="btn-copy" onclick="copyToClipboard()">LINE用にテキストをコピー</button>
+        <div class="brand-stripe"></div>
+        <div class="card-content">
+            <h2 style="color: #2C3E50; border-bottom: none; margin-bottom: 16px;">💬 LINEプレビュー</h2>
+            <textarea id="output-text" readonly placeholder="「プレビューを作成」ボタンを押すと、ここに入力した項目だけをまとめた文章が生成されます。"></textarea>
+            <button class="btn-copy" onclick="copyToClipboard()">LINE用にテキストをコピー</button>
+        </div>
     </div>
 </div>
 
@@ -226,7 +339,7 @@
     async function fetchWeather() {
         const btn = document.querySelector('.btn-get');
         const originalText = btn.innerText;
-        btn.innerText = '取得中...';
+        btn.innerText = '🔄 取得中...';
         
         const areaCode = "080000"; // 茨城県
         const url = `https://www.jma.go.jp/bosai/forecast/data/forecast/${areaCode}.json`;
@@ -263,8 +376,12 @@
                 }
             } catch(e) { console.warn("気温取得エラー", e); }
 
-            btn.innerText = '完了';
-            setTimeout(() => { btn.innerText = originalText; }, 1500);
+            btn.innerText = '✅ 完了！';
+            btn.style.backgroundColor = '#F37021'; // セブンオレンジ
+            setTimeout(() => { 
+                btn.innerText = originalText; 
+                btn.style.backgroundColor = '';
+            }, 2000);
         } catch (error) {
             alert('取得失敗。手入力をお願いします。');
             btn.innerText = originalText;
@@ -275,7 +392,7 @@
         const container = document.getElementById('new-products-container');
         const html = `
             <div class="input-block product-block">
-                <input type="text" class="p-name" placeholder="商品名" style="margin-bottom:8px; font-weight:bold;">
+                <input type="text" class="p-name" placeholder="商品名" style="margin-bottom:12px; font-weight:900;">
                 <div class="grid-4">
                     <input type="number" class="p-deliv" placeholder="納品数">
                     <input type="number" class="p-sales" placeholder="販売数">
@@ -303,14 +420,14 @@
         const container = document.getElementById('sale-container');
         const html = `
             <div class="input-block sale-block">
-                <input type="text" class="sl-name" placeholder="セール名" style="margin-bottom:8px; font-weight:bold;">
+                <input type="text" class="sl-name" placeholder="セール名" style="margin-bottom:12px; font-weight:900;">
                 <label>地区平均（販売数 / 金額 / 前年比）</label>
                 <div class="grid-3">
                     <input type="number" class="sl-d-qty" placeholder="販売数(個)">
                     <input type="number" class="sl-d-amt" placeholder="金額(円)">
                     <input type="number" class="sl-d-yoy" placeholder="前年比(%)">
                 </div>
-                <label>サブ平均（販売数 / 金額 / 前年比）</label>
+                <label style="margin-top: 12px;">サブ平均（販売数 / 金額 / 前年比）</label>
                 <div class="grid-3">
                     <input type="number" class="sl-s-qty" placeholder="販売数(個)">
                     <input type="number" class="sl-s-amt" placeholder="金額(円)">
@@ -324,7 +441,7 @@
         const container = document.getElementById('category-container');
         const html = `
             <div class="input-block category-block">
-                <input type="text" class="c-name" placeholder="分類名" style="margin-bottom:8px; font-weight:bold;">
+                <input type="text" class="c-name" placeholder="分類名" style="margin-bottom:12px; font-weight:900;">
                 <label>地区平均</label>
                 <div class="grid-4">
                     <input type="number" class="c-deliv" placeholder="納品数">
@@ -536,7 +653,16 @@
         if (!output.value) { alert('プレビューを作成してください。'); return; }
         output.select();
         document.execCommand('copy');
-        alert('テキストをコピーしました。画像がある場合は、別途LINEに添付してください。');
+        
+        // ボタンのフィードバックアニメーション
+        const btn = document.querySelector('.btn-copy');
+        const originalText = btn.innerText;
+        btn.innerText = '✅ コピー完了！';
+        btn.style.backgroundColor = '#05A546';
+        setTimeout(() => { 
+            btn.innerText = originalText; 
+            btn.style.backgroundColor = '';
+        }, 2000);
     }
 </script>
 
