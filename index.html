@@ -353,7 +353,7 @@
 
         if (weather || temp || wComment) {
             const h1 = isUra ? "明日の天気だっぺ" : "明日の天候";
-            template += `■ ① ${h1}\n`;
+            template += `■ ${h1}\n`;
             if (weather || temp) {
                 template += `[予報] ${weather || ''} ${temp ? '(' + temp + ')' : ''}\n`;
             }
@@ -372,7 +372,7 @@
 
         if (distSales || distCust || distYoy || subSales || subCust || subYoy) {
             const h2 = isUra ? "昨日の実績だっぺ" : "昨日実績";
-            template += `■ ②・③ ${h2}\n`;
+            template += `■ ${h2}\n`;
             
             let dParts = [];
             if (distSales) dParts.push(`売上:${distSales}千円`);
@@ -427,7 +427,7 @@
         if (prodText || introText) {
             const h4 = isUra ? "新商品がどんげ売れてっか" : "新商品動向";
             const h4_sub = isUra ? "【いれでっか確認するやつ】" : "【導入確認単品】";
-            template += `■ ④ ${h4}\n` + prodText;
+            template += `■ ${h4}\n` + prodText;
             if (introText) template += `${h4_sub}\n` + introText;
             template += "\n";
         }
@@ -472,7 +472,7 @@
         });
         if (saleText) {
             const h5 = isUra ? "セールの状況だっぺ" : "セール販売状況";
-            template += `■ ⑤ ${h5}\n` + saleText + "\n";
+            template += `■ ${h5}\n` + saleText + "\n";
         }
 
         let catText = "";
@@ -503,19 +503,19 @@
         });
         if (catText) {
             const h6 = isUra ? "分類の動きだかんな" : "分類動向";
-            template += `■ ⑥ ${h6}\n` + catText + "\n";
+            template += `■ ${h6}\n` + catText + "\n";
         }
 
         const orderNotes = document.getElementById('order-notes').value;
         if (orderNotes) {
             const h7 = isUra ? "発注の確認だっぺ" : "発注確認事項";
-            template += `■ ⑦ ${h7}\n` + orderNotes + "\n\n";
+            template += `■ ${h7}\n` + orderNotes + "\n\n";
         }
 
         const otherNotes = document.getElementById('other-notes').value;
         if (otherNotes) {
             const h8 = isUra ? "その他の確認事項だっぺ" : "その他・確認事項";
-            template += `■ ⑧ ${h8}\n` + otherNotes + "\n\n";
+            template += `■ ${h8}\n` + otherNotes + "\n\n";
         }
 
         if (isUra) {
