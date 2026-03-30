@@ -169,7 +169,7 @@
 
     <div class="card preview-section">
         <h2>📱 LINEプレビュー</h2>
-        <textarea id="output-text" readonly placeholder="「プレビューを作成」ボタンを押すと、文章が生成されます。"></textarea>
+        <textarea id="output-text" readonly placeholder="「プレビューを作成」ボタンを押すと、入力した項目だけをまとめた文章が生成されます。"></textarea>
         <button class="btn-copy" onclick="copyToClipboard()">LINE用にテキストをコピー</button>
     </div>
 </div>
@@ -183,7 +183,7 @@
         
         if (input.files.length > 4) {
             alert('選択できる画像は最大4枚までです。');
-            input.value = ''; // リセット
+            input.value = '';
             return;
         }
         
@@ -204,7 +204,6 @@
         const originalText = btn.innerText;
         btn.innerText = '取得中...';
         
-        // 茨城県の気象庁コード（080000）で固定
         const areaCode = "080000";
         const url = `https://www.jma.go.jp/bosai/forecast/data/forecast/${areaCode}.json`;
         
@@ -212,12 +211,10 @@
             const response = await fetch(url);
             const data = await response.json();
             
-            // 天気（水戸エリアのデータを取得）
             const weathers = data[0].timeSeries[0].areas[0].weathers;
             const targetWeather = weathers.length > 1 ? weathers[1] : weathers[0];
             document.getElementById('weather-input').value = targetWeather.replace(/　/g, ' ');
 
-            // 気温（週間予報データから明日の日付を探して確実にとる）
             try {
                 const weekTimeDefines = data[1].timeSeries[0].timeDefines;
                 const tempsMin = data[1].timeSeries[1].areas[0].tempsMin;
@@ -237,7 +234,6 @@
                 if (foundIndex !== -1 && tempsMin[foundIndex]) {
                     document.getElementById('temp-input').value = `最高${tempsMax[foundIndex]}℃ / 最低${tempsMin[foundIndex]}℃`;
                 } else {
-                    // 予備ルート
                     const shortTemps = data[0].timeSeries[2].areas[0].temps;
                     if(shortTemps && shortTemps.length >= 2) {
                          document.getElementById('temp-input').value = `最高${shortTemps[shortTemps.length-1]}℃ / 最低${shortTemps[shortTemps.length-2]}℃`;
@@ -255,7 +251,6 @@
         }
     }
 
-    // 各項目の追加ボタン処理
     function addNewProduct() {
         const container = document.getElementById('new-products-container');
         const html = `
@@ -322,7 +317,7 @@
         container.insertAdjacentHTML('beforeend', html);
     }
 
-    // テキスト生成
+    // テキスト生成（空欄の項目は出力しないようにロジックを修正）
     function generateText() {
         let template = "おはようございます、綿谷です。\n最新の数値と共有事項をお送りします。\n\n";
 
@@ -335,19 +330,29 @@
 
         // 2 & 3. 地区・サブ実績
         const distSales = document.getElementById('dist-sales').value;
+        const distCust = document.getElementById('dist-cust').value;
+        const distYoy = document.getElementById('dist-yoy').value;
         const subSales = document.getElementById('sub-sales').value;
-        if (distSales || subSales) {
+        const subCust = document.getElementById('sub-cust').value;
+        const subYoy = document.getElementById('sub-yoy').value;
+
+        if (distSales || distCust || distYoy || subSales || subCust || subYoy) {
             template += "■ ②・③ 昨日実績\n";
-            if (distSales) {
-                const c = document.getElementById('dist-cust').value;
-                const y = document.getElementById('dist-yoy').value;
-                template += `[地区] 売上:${distSales}千円 / 客数:${c || '-'}人 (前年比:${y || '-'}%)\n`;
-            }
-            if (subSales) {
-                const c = document.getElementById('sub-cust').value;
-                const y = document.getElementById('sub-yoy').value;
-                template += `[サブ] 売上:${subSales}千円 / 客数:${c || '-'}人 (前年比:${y || '-'}%)\n`;
-            }
+            
+            // 地区
+            let dParts = [];
+            if (distSales) dParts.push(`売上:${distSales}千円`);
+            if (distCust) dParts.push(`客数:${distCust}人`);
+            if (distYoy) dParts.push(`前年比:${distYoy}%`);
+            if (dParts.length > 0) template += `[地区] ${dParts.join(' / ')}\n`;
+            
+            // サブ
+            let sParts = [];
+            if (subSales) sParts.push(`売上:${subSales}千円`);
+            if (subCust) sParts.push(`客数:${subCust}人`);
+            if (subYoy) sParts.push(`前年比:${subYoy}%`);
+            if (sParts.length > 0) template += `[サブ] ${sParts.join(' / ')}\n`;
+            
             template += "\n";
         }
 
@@ -356,19 +361,37 @@
         document.querySelectorAll('.product-block').forEach(b => {
             const name = b.querySelector('.p-name').value;
             if (name) {
-                const deliv = b.querySelector('.p-deliv').value || "0";
-                const sales = b.querySelector('.p-sales').value || "0";
+                const deliv = b.querySelector('.p-deliv').value;
+                const sales = b.querySelector('.p-sales').value;
                 const rType = b.querySelector('.p-rate-type').value;
-                const rVal = b.querySelector('.p-rate-val').value || "0";
-                prodText += `・${name}\n  └ 納品:${deliv} / 販売:${sales} / ${rType}:${rVal}%\n`;
+                const rVal = b.querySelector('.p-rate-val').value;
+                
+                let pParts = [];
+                if (deliv) pParts.push(`納品:${deliv}`);
+                if (sales) pParts.push(`販売:${sales}`);
+                if (rVal) pParts.push(`${rType}:${rVal}%`);
+                
+                if (pParts.length > 0) {
+                    prodText += `・${name}\n  └ ${pParts.join(' / ')}\n`;
+                } else {
+                    prodText += `・${name}\n`;
+                }
             }
         });
+
         let introText = "";
         document.querySelectorAll('.intro-block').forEach(b => {
             const name = b.querySelector('.i-name').value;
             const code = b.querySelector('.i-code').value;
-            if (name) introText += `・${name} (コード: ${code || '未入力'})\n`;
+            if (name) {
+                if (code) {
+                    introText += `・${name} (コード: ${code})\n`;
+                } else {
+                    introText += `・${name}\n`;
+                }
+            }
         });
+
         if (prodText || introText) {
             template += "■ ④ 新商品動向\n" + prodText;
             if (introText) template += "【導入確認単品】\n" + introText;
@@ -380,17 +403,39 @@
         document.querySelectorAll('.sale-block').forEach(b => {
             const name = b.querySelector('.sl-name').value;
             if (name) {
-                saleText += `[${name}]\n`;
-                const dQ = b.querySelector('.sl-d-qty').value || "-";
-                const dA = b.querySelector('.sl-d-amt').value || "-";
-                const dY = b.querySelector('.sl-d-yoy').value || "-";
-                saleText += `・地区: 販売 ${dQ}個 / ${dA}円 (前年比 ${dY}%)\n`;
-                
-                const sQ = b.querySelector('.sl-s-qty').value || "-";
-                const sA = b.querySelector('.sl-s-amt').value || "-";
-                const sY = b.querySelector('.sl-s-yoy').value || "-";
-                if(sQ !== "-" || sA !== "-") {
-                    saleText += `・サブ: 販売 ${sQ}個 / ${sA}円 (前年比 ${sY}%)\n`;
+                let hasSaleData = false;
+                let currentSaleText = `[${name}]\n`;
+
+                // 地区
+                const dQ = b.querySelector('.sl-d-qty').value;
+                const dA = b.querySelector('.sl-d-amt').value;
+                const dY = b.querySelector('.sl-d-yoy').value;
+                let dParts = [];
+                if (dQ) dParts.push(`販売 ${dQ}個`);
+                if (dA) dParts.push(`${dA}円`);
+                if (dY) dParts.push(`前年比 ${dY}%`);
+                if (dParts.length > 0) {
+                    currentSaleText += `・地区: ${dParts.join(' / ')}\n`;
+                    hasSaleData = true;
+                }
+
+                // サブ
+                const sQ = b.querySelector('.sl-s-qty').value;
+                const sA = b.querySelector('.sl-s-amt').value;
+                const sY = b.querySelector('.sl-s-yoy').value;
+                let sParts = [];
+                if (sQ) sParts.push(`販売 ${sQ}個`);
+                if (sA) sParts.push(`${sA}円`);
+                if (sY) sParts.push(`前年比 ${sY}%`);
+                if (sParts.length > 0) {
+                    currentSaleText += `・サブ: ${sParts.join(' / ')}\n`;
+                    hasSaleData = true;
+                }
+
+                if (hasSaleData) {
+                    saleText += currentSaleText;
+                } else {
+                    saleText += `[${name}]\n`;
                 }
             }
         });
@@ -401,13 +446,25 @@
         document.querySelectorAll('.category-block').forEach(b => {
             const name = b.querySelector('.c-name').value;
             if (name) {
-                const deliv = b.querySelector('.c-deliv').value || "0";
-                const sales = b.querySelector('.c-sales').value || "0";
-                const yoy = b.querySelector('.c-yoy').value || "-";
-                const oos = b.querySelector('.c-oos').value || "-";
+                const deliv = b.querySelector('.c-deliv').value;
+                const sales = b.querySelector('.c-sales').value;
+                const yoy = b.querySelector('.c-yoy').value;
+                const oos = b.querySelector('.c-oos').value;
                 const cmt = b.querySelector('.c-comment').value;
                 
-                catText += `[${name}] 地区平均\n・納品:${deliv} / 販売:${sales} (前年比:${yoy}%) 欠品率:${oos}%\n`;
+                let cParts = [];
+                if (deliv) cParts.push(`納品:${deliv}`);
+                if (sales) cParts.push(`販売:${sales}`);
+                if (yoy) cParts.push(`前年比:${yoy}%`);
+                if (oos) cParts.push(`欠品率:${oos}%`);
+
+                catText += `[${name}] 地区平均`;
+                if (cParts.length > 0) {
+                    catText += `\n・${cParts.join(' / ')}\n`;
+                } else {
+                    catText += "\n";
+                }
+
                 if (cmt) catText += `💡 ${cmt}\n`;
             }
         });
