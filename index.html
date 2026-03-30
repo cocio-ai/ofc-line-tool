@@ -2,7 +2,8 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    /* iOSでの意図しない拡大を防ぐためのviewport設定 */
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>店舗向けLINE発信ツール（綿谷OFC版）</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
@@ -17,24 +18,26 @@
         }
 
         body { font-family: 'Noto Sans JP', sans-serif; padding: 20px; background-color: var(--bg); color: var(--text-main); line-height: 1.5; margin: 0; }
+        
         .container { display: flex; flex-wrap: wrap; gap: 24px; max-width: 1200px; margin: auto; align-items: flex-start; }
-        .card { background: var(--card-bg); padding: 24px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
-        .form-section { flex: 1.5; min-width: 400px; }
-        .preview-section { flex: 1; min-width: 350px; position: sticky; top: 20px; }
+        .card { background: var(--card-bg); padding: 24px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); width: 100%; box-sizing: border-box;}
+        
+        .form-section { flex: 1.5; min-width: 320px; }
+        .preview-section { flex: 1; min-width: 320px; position: sticky; top: 20px; }
 
         .header-container { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border); padding-bottom: 12px; margin-bottom: 12px; }
         h2 { font-size: 1.25rem; color: var(--primary); margin: 0; display: flex; align-items: center; }
         
-        /* 裏モード用の隠しスイッチを最上段へ */
         .secret-switch { text-align: right; }
         .secret-switch label { display: inline-flex; align-items: center; cursor: pointer; font-size: 0.85rem; color: #999; font-weight: bold;}
         .secret-switch input { width: auto; margin-right: 5px; cursor: pointer; accent-color: #E45E20;}
 
-        .section-title { font-size: 1rem; font-weight: 700; margin: 24px 0 12px 0; border-left: 4px solid var(--primary); padding-left: 10px; }
+        .section-title { font-size: 1.05rem; font-weight: 700; margin: 28px 0 12px 0; border-left: 4px solid var(--primary); padding-left: 10px; }
         label { display: block; font-weight: 500; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px; }
         
+        /* 【重要】iOSズーム防止のため font-size: 16px を指定 */
         input[type="text"], input[type="number"], textarea, select { 
-            width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; box-sizing: border-box; font-family: inherit; font-size: 0.9rem; transition: all 0.2s; background-color: #F9FAFB;
+            width: 100%; padding: 12px 10px; border: 1px solid var(--border); border-radius: 6px; box-sizing: border-box; font-family: inherit; font-size: 16px; transition: all 0.2s; background-color: #F9FAFB;
         }
         input:focus, textarea:focus, select:focus { outline: none; border-color: var(--primary); background-color: #FFF; box-shadow: 0 0 0 3px rgba(0, 141, 98, 0.1); }
 
@@ -47,22 +50,50 @@
         .sub-label { font-size: 0.8rem; color: var(--primary); margin: 8px 0 4px 0; display: block; font-weight: 700;}
 
         button { font-family: inherit; border: none; border-radius: 6px; cursor: pointer; font-weight: 700; transition: all 0.2s; }
-        .btn-get { background-color: var(--primary); color: white; padding: 8px 16px; flex: none; width: auto;}
+        .btn-get { background-color: var(--primary); color: white; padding: 10px 16px; flex: none; width: auto;}
         .btn-get:hover { background-color: var(--primary-hover); }
-        .btn-add { background-color: #E5E7EB; color: var(--text-main); padding: 8px 16px; font-size: 0.85rem; width: 100%; margin-bottom: 8px;}
+        .btn-add { background-color: #E5E7EB; color: var(--text-main); padding: 12px 16px; font-size: 0.95rem; width: 100%; margin-bottom: 8px;}
         .btn-add:hover { background-color: #D1D5DB; }
-        .btn-generate { background-color: var(--primary); color: white; padding: 16px; font-size: 1.1rem; width: 100%; margin-top: 5px; box-shadow: 0 4px 6px rgba(0, 141, 98, 0.2); }
+        .btn-generate { background-color: var(--primary); color: white; padding: 16px; font-size: 1.1rem; width: 100%; margin-top: 10px; box-shadow: 0 4px 6px rgba(0, 141, 98, 0.2); }
         .btn-generate:hover { background-color: var(--primary-hover); transform: translateY(-1px); }
         .btn-copy { background-color: #06C755; color: white; padding: 16px; font-size: 1.1rem; width: 100%; margin-top: 16px; }
         .btn-copy:hover { background-color: #05A546; }
 
-        #output-text { height: 750px; font-family: 'Courier New', monospace; resize: none; background-color: #F9FAFB; font-size: 13px; line-height: 1.6; padding: 16px; }
+        #output-text { height: 600px; font-family: 'Courier New', monospace; resize: none; background-color: #F9FAFB; font-size: 14px; line-height: 1.6; padding: 16px; }
         
         .photo-area { border: 2px dashed var(--border); padding: 16px; text-align: center; border-radius: 8px; background: #fff; margin-bottom: 12px;}
         .photo-preview { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; justify-content: center;}
         .photo-preview img { width: 80px; height: 80px; object-fit: cover; border-radius: 4px; border: 1px solid #ccc; }
         .note { font-size: 0.75rem; color: #E45E20; margin-top: 4px; }
         .fixed-location { font-weight: bold; font-size: 1rem; color: var(--text-main); padding-left: 4px; }
+
+        /* =========================================
+           iPhone・スマホ用レイアウト（幅768px以下）
+           ========================================= */
+        @media screen and (max-width: 768px) {
+            body { padding: 10px; }
+            .container { gap: 16px; flex-direction: column; }
+            .card { padding: 16px; width: 100%; }
+            .form-section, .preview-section { flex: none; min-width: 100%; width: 100%; }
+            
+            /* プレビュー画面の追従をオフ（スマホでは下に配置） */
+            .preview-section { position: relative; top: 0; }
+            
+            /* 横並びの入力欄を縦並びに変更 */
+            .flex-inputs { flex-direction: column; align-items: stretch; gap: 8px; }
+            
+            /* ボタン類を押しやすくフル幅に */
+            .btn-get { width: 100%; padding: 12px; margin-top: 4px; }
+            .fixed-location { margin-bottom: 4px; text-align: center; }
+            
+            /* 3列・4列の項目を見やすく変更 */
+            .grid-3 { grid-template-columns: 1fr; gap: 8px; } /* 売上等は完全に縦並び */
+            .grid-4 { grid-template-columns: 1fr 1fr; gap: 8px; } /* 納品/販売などは2列 */
+            
+            /* ヘッダーの裏モードスイッチを調整 */
+            .header-container { flex-direction: column; align-items: flex-start; gap: 12px; }
+            .secret-switch { align-self: flex-end; }
+        }
     </style>
 </head>
 <body>
@@ -77,10 +108,8 @@
         </div>
 
         <div class="section-title">① 明日の天気と気温</div>
-        <div class="flex-inputs" style="margin-bottom: 12px;">
-            <div class="fixed-location">📍 茨城県 水戸市</div>
-            <button type="button" class="btn-get" onclick="fetchWeather()" style="margin-left: auto;">自動取得</button>
-        </div>
+        <div class="fixed-location">📍 茨城県 水戸市</div>
+        <button type="button" class="btn-get" onclick="fetchWeather()" style="margin-bottom: 8px;">天気を自動取得</button>
         <div class="flex-inputs">
             <input type="text" id="weather-input" placeholder="天気（例: 晴れのち雨）">
             <input type="text" id="temp-input" placeholder="気温（例: 最高28℃ / 最低20℃）">
@@ -112,14 +141,14 @@
         <div id="new-products-container">
             <div class="input-block product-block">
                 <input type="text" class="p-name" placeholder="商品名" style="margin-bottom:8px; font-weight:bold;">
-                <div class="flex-inputs">
+                <div class="grid-4">
                     <input type="number" class="p-deliv" placeholder="納品数">
                     <input type="number" class="p-sales" placeholder="販売数">
-                    <select class="p-rate-type" style="flex: 0.8;">
+                    <select class="p-rate-type">
                         <option value="欠品率">欠品率</option>
                         <option value="導入率">導入率</option>
                     </select>
-                    <input type="number" class="p-rate-val" placeholder="%" style="flex: 0.6;">
+                    <input type="number" class="p-rate-val" placeholder="%">
                 </div>
             </div>
         </div>
@@ -128,7 +157,7 @@
         <span class="sub-label">▼ 導入確認単品</span>
         <div id="intro-items-container">
             <div class="flex-inputs intro-block">
-                <input type="text" class="i-name" placeholder="商品名" style="flex: 2;">
+                <input type="text" class="i-name" placeholder="商品名">
                 <input type="text" class="i-code" placeholder="商品コード(6桁)" maxlength="6">
             </div>
         </div>
@@ -257,14 +286,14 @@
         const html = `
             <div class="input-block product-block">
                 <input type="text" class="p-name" placeholder="商品名" style="margin-bottom:8px; font-weight:bold;">
-                <div class="flex-inputs">
+                <div class="grid-4">
                     <input type="number" class="p-deliv" placeholder="納品数">
                     <input type="number" class="p-sales" placeholder="販売数">
-                    <select class="p-rate-type" style="flex: 0.8;">
+                    <select class="p-rate-type">
                         <option value="欠品率">欠品率</option>
                         <option value="導入率">導入率</option>
                     </select>
-                    <input type="number" class="p-rate-val" placeholder="%" style="flex: 0.6;">
+                    <input type="number" class="p-rate-val" placeholder="%">
                 </div>
             </div>`;
         container.insertAdjacentHTML('beforeend', html);
@@ -274,7 +303,7 @@
         const container = document.getElementById('intro-items-container');
         const html = `
             <div class="flex-inputs intro-block">
-                <input type="text" class="i-name" placeholder="商品名" style="flex: 2;">
+                <input type="text" class="i-name" placeholder="商品名">
                 <input type="text" class="i-code" placeholder="商品コード(6桁)" maxlength="6">
             </div>`;
         container.insertAdjacentHTML('beforeend', html);
@@ -319,9 +348,7 @@
     }
 
     function generateText() {
-        // 裏モードの判定
         const isUra = document.getElementById('ura-mode').checked;
-        
         let template = "";
         
         if (isUra) {
@@ -330,7 +357,6 @@
             template += "おはようございます、綿谷です。\n最新の数値と共有事項をお送りします。\n\n";
         }
 
-        // 1. 天候とコメント
         const weather = document.getElementById('weather-input').value;
         const temp = document.getElementById('temp-input').value;
         const wComment = document.getElementById('weather-comment').value;
@@ -347,7 +373,6 @@
             template += `\n`;
         }
 
-        // 2 & 3. 地区・サブ実績
         const distSales = document.getElementById('dist-sales').value;
         const distCust = document.getElementById('dist-cust').value;
         const distYoy = document.getElementById('dist-yoy').value;
@@ -374,7 +399,6 @@
             template += "\n";
         }
 
-        // 4. 新商品動向
         let prodText = "";
         document.querySelectorAll('.product-block').forEach(b => {
             const name = b.querySelector('.p-name').value;
@@ -418,7 +442,6 @@
             template += "\n";
         }
 
-        // 5. セール状況
         let saleText = "";
         document.querySelectorAll('.sale-block').forEach(b => {
             const name = b.querySelector('.sl-name').value;
@@ -462,7 +485,6 @@
             template += `■ ⑤ ${h5}\n` + saleText + "\n";
         }
 
-        // 6. 分類動向
         let catText = "";
         document.querySelectorAll('.category-block').forEach(b => {
             const name = b.querySelector('.c-name').value;
@@ -494,14 +516,12 @@
             template += `■ ⑥ ${h6}\n` + catText + "\n";
         }
 
-        // 7. 発注確認
         const orderNotes = document.getElementById('order-notes').value;
         if (orderNotes) {
             const h7 = isUra ? "発注の確認だっぺ" : "発注確認事項";
             template += `■ ⑦ ${h7}\n` + orderNotes + "\n\n";
         }
 
-        // 8. その他
         const otherNotes = document.getElementById('other-notes').value;
         if (otherNotes) {
             const h8 = isUra ? "その他の確認事項だっぺ" : "その他・確認事項";
@@ -515,6 +535,11 @@
         }
 
         document.getElementById('output-text').value = template;
+        
+        // スマホ時にプレビューへ自動スクロール
+        if(window.innerWidth <= 768) {
+            document.querySelector('.preview-section').scrollIntoView({ behavior: 'smooth' });
+        }
     }
 
     function copyToClipboard() {
