@@ -44,7 +44,7 @@
         .btn-get:hover { background-color: var(--primary-hover); }
         .btn-add { background-color: #E5E7EB; color: var(--text-main); padding: 8px 16px; font-size: 0.85rem; width: 100%; margin-bottom: 8px;}
         .btn-add:hover { background-color: #D1D5DB; }
-        .btn-generate { background-color: var(--primary); color: white; padding: 16px; font-size: 1.1rem; width: 100%; margin-top: 24px; box-shadow: 0 4px 6px rgba(0, 141, 98, 0.2); }
+        .btn-generate { background-color: var(--primary); color: white; padding: 16px; font-size: 1.1rem; width: 100%; margin-top: 5px; box-shadow: 0 4px 6px rgba(0, 141, 98, 0.2); }
         .btn-generate:hover { background-color: var(--primary-hover); transform: translateY(-1px); }
         .btn-copy { background-color: #06C755; color: white; padding: 16px; font-size: 1.1rem; width: 100%; margin-top: 16px; }
         .btn-copy:hover { background-color: #05A546; }
@@ -56,6 +56,11 @@
         .photo-preview img { width: 80px; height: 80px; object-fit: cover; border-radius: 4px; border: 1px solid #ccc; }
         .note { font-size: 0.75rem; color: #E45E20; margin-top: 4px; }
         .fixed-location { font-weight: bold; font-size: 1rem; color: var(--text-main); padding-left: 4px; }
+        
+        /* 裏モード用の隠しスイッチ */
+        .secret-switch { text-align: right; margin-top: 20px; }
+        .secret-switch label { display: inline-flex; align-items: center; cursor: pointer; font-size: 1rem; color: #ccc; }
+        .secret-switch input { width: auto; margin-right: 5px; cursor: pointer; accent-color: #E45E20;}
     </style>
 </head>
 <body>
@@ -164,6 +169,10 @@
         <div class="section-title">⑧ その他・確認事項</div>
         <textarea id="other-notes" rows="4" placeholder="その他の共有事項を入力してください"></textarea>
 
+        <div class="secret-switch">
+            <label><input type="checkbox" id="ura-mode">🤫</label>
+        </div>
+        
         <button type="button" class="btn-generate" onclick="generateText()">プレビューを作成 ✨</button>
     </div>
 
@@ -175,18 +184,11 @@
 </div>
 
 <script>
-    // 写真プレビュー機能
     function previewPhotos() {
         const input = document.getElementById('photo-upload');
         const container = document.getElementById('photo-preview-container');
         container.innerHTML = '';
-        
-        if (input.files.length > 4) {
-            alert('選択できる画像は最大4枚までです。');
-            input.value = '';
-            return;
-        }
-        
+        if (input.files.length > 4) { alert('選択できる画像は最大4枚までです。'); input.value = ''; return; }
         for (let i = 0; i < input.files.length; i++) {
             const reader = new FileReader();
             reader.onload = function(e) {
@@ -198,13 +200,12 @@
         }
     }
 
-    // 茨城県 水戸市の天気と気温を自動取得
     async function fetchWeather() {
         const btn = document.querySelector('.btn-get');
         const originalText = btn.innerText;
         btn.innerText = '取得中...';
         
-        const areaCode = "080000";
+        const areaCode = "080000"; // 茨城県
         const url = `https://www.jma.go.jp/bosai/forecast/data/forecast/${areaCode}.json`;
         
         try {
@@ -226,9 +227,7 @@
                 
                 let foundIndex = -1;
                 for (let i = 0; i < weekTimeDefines.length; i++) {
-                    if (weekTimeDefines[i].startsWith(tomorrowStr)) {
-                        foundIndex = i; break;
-                    }
+                    if (weekTimeDefines[i].startsWith(tomorrowStr)) { foundIndex = i; break; }
                 }
                 
                 if (foundIndex !== -1 && tempsMin[foundIndex]) {
@@ -239,9 +238,7 @@
                          document.getElementById('temp-input').value = `最高${shortTemps[shortTemps.length-1]}℃ / 最低${shortTemps[shortTemps.length-2]}℃`;
                     }
                 }
-            } catch(e) {
-                console.warn("気温取得エラー", e);
-            }
+            } catch(e) { console.warn("気温取得エラー", e); }
 
             btn.innerText = '完了';
             setTimeout(() => { btn.innerText = originalText; }, 1500);
@@ -317,15 +314,24 @@
         container.insertAdjacentHTML('beforeend', html);
     }
 
-    // テキスト生成（空欄の項目は出力しないようにロジックを修正）
     function generateText() {
-        let template = "おはようございます、綿谷です。\n最新の数値と共有事項をお送りします。\n\n";
+        // 裏モードの判定
+        const isUra = document.getElementById('ura-mode').checked;
+        
+        let template = "";
+        
+        if (isUra) {
+            template += "おはようごぜぇます、綿谷だっぺ。\n最新の数字と共有事項を送るかんな。よーく見でくれよな。\n\n";
+        } else {
+            template += "おはようございます、綿谷です。\n最新の数値と共有事項をお送りします。\n\n";
+        }
 
         // 1. 天候
         const weather = document.getElementById('weather-input').value;
         const temp = document.getElementById('temp-input').value;
         if (weather || temp) {
-            template += `■ ① 明日の天候\n[予報] ${weather || ''} ${temp ? '(' + temp + ')' : ''}\n\n`;
+            const h1 = isUra ? "明日の天気だっぺ" : "明日の天候";
+            template += `■ ① ${h1}\n[予報] ${weather || ''} ${temp ? '(' + temp + ')' : ''}\n\n`;
         }
 
         // 2 & 3. 地区・サブ実績
@@ -337,16 +343,15 @@
         const subYoy = document.getElementById('sub-yoy').value;
 
         if (distSales || distCust || distYoy || subSales || subCust || subYoy) {
-            template += "■ ②・③ 昨日実績\n";
+            const h2 = isUra ? "昨日の実績だっぺ" : "昨日実績";
+            template += `■ ②・③ ${h2}\n`;
             
-            // 地区
             let dParts = [];
             if (distSales) dParts.push(`売上:${distSales}千円`);
             if (distCust) dParts.push(`客数:${distCust}人`);
             if (distYoy) dParts.push(`前年比:${distYoy}%`);
             if (dParts.length > 0) template += `[地区] ${dParts.join(' / ')}\n`;
             
-            // サブ
             let sParts = [];
             if (subSales) sParts.push(`売上:${subSales}千円`);
             if (subCust) sParts.push(`客数:${subCust}人`);
@@ -393,8 +398,10 @@
         });
 
         if (prodText || introText) {
-            template += "■ ④ 新商品動向\n" + prodText;
-            if (introText) template += "【導入確認単品】\n" + introText;
+            const h4 = isUra ? "新商品がどんげ売れてっか" : "新商品動向";
+            const h4_sub = isUra ? "【いれでっか確認するやつ】" : "【導入確認単品】";
+            template += `■ ④ ${h4}\n` + prodText;
+            if (introText) template += `${h4_sub}\n` + introText;
             template += "\n";
         }
 
@@ -406,7 +413,6 @@
                 let hasSaleData = false;
                 let currentSaleText = `[${name}]\n`;
 
-                // 地区
                 const dQ = b.querySelector('.sl-d-qty').value;
                 const dA = b.querySelector('.sl-d-amt').value;
                 const dY = b.querySelector('.sl-d-yoy').value;
@@ -419,7 +425,6 @@
                     hasSaleData = true;
                 }
 
-                // サブ
                 const sQ = b.querySelector('.sl-s-qty').value;
                 const sA = b.querySelector('.sl-s-amt').value;
                 const sY = b.querySelector('.sl-s-yoy').value;
@@ -439,7 +444,10 @@
                 }
             }
         });
-        if (saleText) template += "■ ⑤ セール販売状況\n" + saleText + "\n";
+        if (saleText) {
+            const h5 = isUra ? "セールの状況だっぺ" : "セール販売状況";
+            template += `■ ⑤ ${h5}\n` + saleText + "\n";
+        }
 
         // 6. 分類動向
         let catText = "";
@@ -465,20 +473,34 @@
                     catText += "\n";
                 }
 
-                if (cmt) catText += `💡 ${cmt}\n`;
+                if (cmt) catText += `💡 ${cmt}${isUra ? '（ってことだっぺ！）' : ''}\n`;
             }
         });
-        if (catText) template += "■ ⑥ 分類動向\n" + catText + "\n";
+        if (catText) {
+            const h6 = isUra ? "分類の動きだかんな" : "分類動向";
+            template += `■ ⑥ ${h6}\n` + catText + "\n";
+        }
 
         // 7. 発注確認
         const orderNotes = document.getElementById('order-notes').value;
-        if (orderNotes) template += "■ ⑦ 発注確認事項\n" + orderNotes + "\n\n";
+        if (orderNotes) {
+            const h7 = isUra ? "発注の確認だっぺ" : "発注確認事項";
+            template += `■ ⑦ ${h7}\n` + orderNotes + "\n\n";
+        }
 
         // 8. その他
         const otherNotes = document.getElementById('other-notes').value;
-        if (otherNotes) template += "■ ⑧ その他・確認事項\n" + otherNotes + "\n\n";
+        if (otherNotes) {
+            const h8 = isUra ? "その他の確認事項だっぺ" : "その他・確認事項";
+            template += `■ ⑧ ${h8}\n` + otherNotes + "\n\n";
+        }
 
-        template += "本日もよろしくお願いいたします！";
+        if (isUra) {
+            template += "今日も一日よろしく頼むかんな！がんばっぺ！";
+        } else {
+            template += "本日もよろしくお願いいたします！";
+        }
+
         document.getElementById('output-text').value = template;
     }
 
