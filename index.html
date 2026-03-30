@@ -26,10 +26,10 @@
         .section-title { font-size: 1rem; font-weight: 700; margin: 24px 0 12px 0; border-left: 4px solid var(--primary); padding-left: 10px; }
         label { display: block; font-weight: 500; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px; }
         
-        input[type="text"], input[type="number"], select, textarea { 
+        input[type="text"], input[type="number"], textarea, select { 
             width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; box-sizing: border-box; font-family: inherit; font-size: 0.9rem; transition: all 0.2s; background-color: #F9FAFB;
         }
-        input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); background-color: #FFF; box-shadow: 0 0 0 3px rgba(0, 141, 98, 0.1); }
+        input:focus, textarea:focus, select:focus { outline: none; border-color: var(--primary); background-color: #FFF; box-shadow: 0 0 0 3px rgba(0, 141, 98, 0.1); }
 
         .flex-inputs { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
         .flex-inputs > * { flex: 1; margin-bottom: 0; }
@@ -51,11 +51,11 @@
 
         #output-text { height: 750px; font-family: 'Courier New', monospace; resize: none; background-color: #F9FAFB; font-size: 13px; line-height: 1.6; padding: 16px; }
         
-        /* 写真アップロード周りのスタイル */
         .photo-area { border: 2px dashed var(--border); padding: 16px; text-align: center; border-radius: 8px; background: #fff; margin-bottom: 12px;}
         .photo-preview { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; justify-content: center;}
         .photo-preview img { width: 80px; height: 80px; object-fit: cover; border-radius: 4px; border: 1px solid #ccc; }
         .note { font-size: 0.75rem; color: #E45E20; margin-top: 4px; }
+        .fixed-location { font-weight: bold; font-size: 1rem; color: var(--text-main); padding-left: 4px; }
     </style>
 </head>
 <body>
@@ -65,14 +65,9 @@
         <h2>📝 連絡事項 入力フォーム</h2>
 
         <div class="section-title">① 明日の天気と気温</div>
-        <div class="flex-inputs">
-            <select id="area-select" onchange="saveSettings()">
-                <option value="130000">東京都</option>
-                <option value="230000" selected>愛知県</option>
-                <option value="270000">大阪府</option>
-                <option value="400000">福岡県</option>
-                </select>
-            <button type="button" class="btn-get" onclick="fetchWeather()">自動取得</button>
+        <div class="flex-inputs" style="margin-bottom: 12px;">
+            <div class="fixed-location">📍 茨城県 水戸市</div>
+            <button type="button" class="btn-get" onclick="fetchWeather()" style="margin-left: auto;">自動取得</button>
         </div>
         <div class="flex-inputs">
             <input type="text" id="weather-input" placeholder="天気（例: 晴れのち雨）">
@@ -180,15 +175,6 @@
 </div>
 
 <script>
-    // 初期設定読み込み
-    window.onload = function() {
-        const savedArea = localStorage.getItem('selectedArea');
-        if (savedArea) document.getElementById('area-select').value = savedArea;
-    };
-    function saveSettings() {
-        localStorage.setItem('selectedArea', document.getElementById('area-select').value);
-    }
-
     // 写真プレビュー機能
     function previewPhotos() {
         const input = document.getElementById('photo-upload');
@@ -212,20 +198,21 @@
         }
     }
 
-    // 天気と気温の取得（最低気温の取得ロジック改善）
+    // 茨城県 水戸市の天気と気温を自動取得
     async function fetchWeather() {
         const btn = document.querySelector('.btn-get');
         const originalText = btn.innerText;
         btn.innerText = '取得中...';
         
-        const areaCode = document.getElementById('area-select').value;
+        // 茨城県の気象庁コード（080000）で固定
+        const areaCode = "080000";
         const url = `https://www.jma.go.jp/bosai/forecast/data/forecast/${areaCode}.json`;
         
         try {
             const response = await fetch(url);
             const data = await response.json();
             
-            // 天気
+            // 天気（水戸エリアのデータを取得）
             const weathers = data[0].timeSeries[0].areas[0].weathers;
             const targetWeather = weathers.length > 1 ? weathers[1] : weathers[0];
             document.getElementById('weather-input').value = targetWeather.replace(/　/g, ' ');
