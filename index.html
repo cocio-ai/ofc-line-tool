@@ -2,7 +2,6 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    /* iOSでの意図しない拡大を防ぐためのviewport設定 */
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>店舗向けLINE発信ツール（綿谷OFC版）</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
@@ -35,7 +34,6 @@
         .section-title { font-size: 1.05rem; font-weight: 700; margin: 28px 0 12px 0; border-left: 4px solid var(--primary); padding-left: 10px; }
         label { display: block; font-weight: 500; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px; }
         
-        /* 【重要】iOSズーム防止のため font-size: 16px を指定 */
         input[type="text"], input[type="number"], textarea, select { 
             width: 100%; padding: 12px 10px; border: 1px solid var(--border); border-radius: 6px; box-sizing: border-box; font-family: inherit; font-size: 16px; transition: all 0.2s; background-color: #F9FAFB;
         }
@@ -67,30 +65,22 @@
         .note { font-size: 0.75rem; color: #E45E20; margin-top: 4px; }
         .fixed-location { font-weight: bold; font-size: 1rem; color: var(--text-main); padding-left: 4px; }
 
-        /* =========================================
-           iPhone・スマホ用レイアウト（幅768px以下）
-           ========================================= */
         @media screen and (max-width: 768px) {
             body { padding: 10px; }
             .container { gap: 16px; flex-direction: column; }
             .card { padding: 16px; width: 100%; }
             .form-section, .preview-section { flex: none; min-width: 100%; width: 100%; }
             
-            /* プレビュー画面の追従をオフ（スマホでは下に配置） */
             .preview-section { position: relative; top: 0; }
             
-            /* 横並びの入力欄を縦並びに変更 */
             .flex-inputs { flex-direction: column; align-items: stretch; gap: 8px; }
             
-            /* ボタン類を押しやすくフル幅に */
             .btn-get { width: 100%; padding: 12px; margin-top: 4px; }
             .fixed-location { margin-bottom: 4px; text-align: center; }
             
-            /* 3列・4列の項目を見やすく変更 */
-            .grid-3 { grid-template-columns: 1fr; gap: 8px; } /* 売上等は完全に縦並び */
-            .grid-4 { grid-template-columns: 1fr 1fr; gap: 8px; } /* 納品/販売などは2列 */
+            .grid-3 { grid-template-columns: 1fr; gap: 8px; }
+            .grid-4 { grid-template-columns: 1fr 1fr; gap: 8px; }
             
-            /* ヘッダーの裏モードスイッチを調整 */
             .header-container { flex-direction: column; align-items: flex-start; gap: 12px; }
             .secret-switch { align-self: flex-end; }
         }
@@ -536,7 +526,6 @@
 
         document.getElementById('output-text').value = template;
         
-        // スマホ時にプレビューへ自動スクロール
         if(window.innerWidth <= 768) {
             document.querySelector('.preview-section').scrollIntoView({ behavior: 'smooth' });
         }
